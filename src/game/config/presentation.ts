@@ -1,0 +1,27 @@
+export const presentation = {
+  colors: {
+    forest: '#153c34',
+    gold: '#e7bf67',
+    mint: '#a8d6ae',
+    parchment: '#f4f2e9',
+    boss: '#ef977e',
+  },
+  animation: {
+    hit: 0.16,
+    death: 0.24,
+    entrance: 0.32,
+    bossEntrance: 0.58,
+    damageNumber: 0.8,
+    coin: 0.7,
+    counter: 0.35,
+    goldPulse: 0.3,
+    upgradePulse: 0.65,
+    banner: 0.25,
+  },
+  limits: { particles: 90, numbers: 16, coins: 24, sounds: 5 },
+  shake: { hit: 2, final: 5, boss: 8 },
+  maxResolution: 2,
+  bossScale: .94,
+  noticeMs: 2200,
+  bossCelebrationMs: 2000,
+} as const;
