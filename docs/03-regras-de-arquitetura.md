@@ -37,7 +37,9 @@ O renderizador observa estado e eventos. Não decide recompensa, custo, dano ou 
 
 ### Interface: apresentação e intenção do jogador
 
-React, Tailwind e GSAP apresentam HUD, barras, cards, configurações e feedback de interface. A UI envia comandos e apresenta resultados; não implementa cópias das fórmulas de economia ou combate.
+React, Tailwind e GSAP apresentam HUD, barras, controles, configurações e feedback de interface. A UI envia comandos e apresenta resultados; não implementa cópias das fórmulas de economia ou combate.
+
+Após o redesign, `App.tsx` compõe uma única tela que ocupa `100dvh`: canvas, HUD e upgrade sobrepostos, sem header/footer de website. Textos e componentes visuais seguem a política estrita do documento de UI/UX. Configurações continuam em diálogo nativo, com foco modal e fechamento por Escape.
 
 A UI pode sobrepor o canvas, com tratamento explícito de eventos e áreas interativas para evitar bloqueios de clique e ataques ao pressionar botões.
 
@@ -116,6 +118,16 @@ src/
 | `scripts/analyze-balance.ts` | Simulação que reutiliza as fórmulas atuais |
 
 Não foram criados diretórios vazios ou sistemas separados sem necessidade. Os efeitos pertencem ao renderizador nesta escala de protótipo; extraí-los só quando a evolução justificar. O componente de UI não calcula preços ou dano por conta própria.
+
+### Integração de layout com a HUD
+
+`GameRenderer` oferece o callback opcional `onLayout(SceneLayout)`, com posição do inimigo, terreno, escala e tipo do encontro. Ele é emitido em resize e troca de encontro. A UI usa refs para posicionar vida e foco de ataque sem atualizações por frame em React/Zustand. A escala se adapta à viewport para preservar espaço para HUD e upgrade; arte e animações não são substituídas.
+
+As mesmas ilustrações SVG são rasterizadas na resolução configurada, com tamanho lógico preservado pelo `ImageSource`, para manter nitidez com personagens maiores. O cenário conserva suas proporções. Números longos usam composição compacta na HUD mobile sem alterar os valores de jogo.
+
+O callback opcional `goldTarget()` informa o centro do ícone de gold em coordenadas do canvas. O renderizador o consulta uma vez por recompensa para direcionar as moedas ao contador real. Não há leitura de layout DOM a cada frame. Esses contratos são de apresentação e não interferem na engine.
+
+Ataques por ponteiro continuam sendo tratados pelo PixiJS. O botão acessível de ataque não intercepta o ponteiro; recebe foco pelo teclado e encaminha a mesma intenção de ataque ao runtime. A dica inicial é derivada do progresso existente e removida ao primeiro golpe, sem alterar o formato de persistência.
 
 ## Contratos e eventos
 

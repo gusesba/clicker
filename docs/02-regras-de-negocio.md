@@ -44,6 +44,8 @@ O briefing não define críticos, combos, habilidades ou limite artificial de at
 
 **Verificação futura:** uma interação válida produz um único dano; clicar no upgrade não ataca; sequências rápidas não concedem derrotas duplicadas.
 
+**Apresentação após o redesign:** o alvo do canvas continua recebendo clique/toque. Um controle de ataque acessível recebe foco por Tab e aceita Enter/Espaço, com contorno visível no inimigo ao focar. A instrução inicial desaparece no primeiro `enemy:damaged` e não volta ao carregar um save com progresso. Essa orientação é estado de apresentação; não altera o save nem a validação de ataques.
+
 ## 3. Dano e vida do inimigo
 
 **Objetivo:** permitir que o jogador reduza a vida do inimigo até derrotá-lo.
@@ -94,6 +96,8 @@ Não há regra aprovada de recompensa aleatória, gold por clique sem derrota, r
 
 **Feedback:** pressão, pulso, brilho ou efeito mágico, dano aumentado perceptivelmente, custo atualizado e som específico quando habilitado.
 
+O controle permanece na base da viewport, sobre o cenário, com ícone, dano atual e próximo valor, custo e ação “Aprimorar”. A indisponibilidade é comunicada pelo botão desabilitado e pela comparação entre gold e custo. Não há título de seção, badge de nível ou texto de compra disponível/indisponível no combate.
+
 O briefing prevê um upgrade principal de dano. Não há compra em lote, árvore de talentos, reembolso ou múltiplos tipos de melhoria definidos.
 
 **Valores atuais:** preço `teto(20 × 1,22^nível)`; dano após a compra `arredondar2(5 × 1,20^(nível + 1))`. O preço usa o nível anterior à compra. Não há teto de conteúdo ou árvore de upgrades. Há um limite técnico de contador inteiro seguro, explicado no documento de balanceamento.
@@ -106,7 +110,7 @@ Após cada derrota, o progresso aumenta uma vez. Antes de atingir o objetivo, o 
 
 A entrada de uma nova fase atualiza os dados do encontro de acordo com o escalonamento. Não reutilizar acidentalmente a vida parcial ou o estado de derrota do inimigo anterior.
 
-**Feedback:** destaque da fase, atualização suave do progresso, transição breve e celebração moderada.
+**Feedback:** pulso na fase da HUD, progresso atualizado e transição breve, sem frase adicional na tela. Leitores de tela recebem o anúncio da nova fase.
 
 ## 8. Fases de boss
 
@@ -147,6 +151,8 @@ Disponibilizar controle simples de volume e opção de desativar o áudio. Quand
 Preparar opção para reduzir efeitos e movimentos. Essa preferência altera a apresentação, preservando dano, recompensas, preços, progressão e capacidade de identificar eventos.
 
 **Implementação atual:** áudio inicialmente habilitado, volume global de efeitos em 45%, sem música. O modo de redução começa conforme `prefers-reduced-motion` em uma partida nova e depois usa a preferência salva. Todas essas preferências são persistidas. Sons são gerados localmente; a reprodução é desbloqueada no primeiro ataque ou compra. O controle reduzido altera apenas apresentação.
+
+Som, volume e redução de movimento são acessados pelo único botão de configurações na HUD. O estado do save aparece nesse menu; estados excepcionais também acendem um ponto de aviso no botão, sem mensagem permanente sobre o combate.
 
 ## 12. Variações visuais e apresentação
 

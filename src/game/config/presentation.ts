@@ -23,5 +23,4 @@ export const presentation = {
   maxResolution: 2,
   bossScale: .94,
   noticeMs: 2200,
-  bossCelebrationMs: 2000,
 } as const;

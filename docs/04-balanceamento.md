@@ -160,3 +160,4 @@ Simulações devem explicitar cadência de clique e política de compra. A anál
 | --- | --- | --- | --- |
 | 16/10/2026 | Documentação inicial baseada no briefing | Apenas requisitos de 5 inimigos comuns, boss a cada 10 fases e 1 alvo na fase de boss; demais valores pendentes | Leitura do briefing e inspeção da pasta vazia; sem código ou testes de gameplay |
 | 16/10/2026 | Protótipo implementado com base confirmada pelo usuário | Fórmulas e parâmetros desta versão; retomada de vida parcial e dano excedente sem transferência | 11 testes de regras/save, integração no navegador e simulação até a fase 100 |
+| 16/10/2026 | Redesign da HUD e da composição de gameplay | Nenhuma alteração de fórmulas, preços, dano, recompensas, progressão ou tempo de troca; formato do save preservado | Refatoração concentrada na apresentação e integração de layout |

@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
+import { Application, Container, Graphics, ImageSource, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import type { GameEngine } from '../engine/GameEngine';
 import { enemyVariant, formatNumber, isBoss } from '../config/balance';
 import { presentation } from '../config/presentation';
@@ -7,12 +7,15 @@ import * as art from './art';
 type Particle = { view: Graphics; age: number; duration: number; vx: number; vy: number };
 type Damage = { view: Text; age: number; x: number; y: number; drift: number };
 type Coin = { view: Graphics; age: number; x: number; y: number; delay: number };
+export type SceneLayout = { enemyX: number; ground: number; unit: number; boss: boolean };
 
 async function textureFromSvg(source: string) {
   const image = new Image();
-  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`;
+  const resolution = presentation.maxResolution;
+  const raster = source.replace(/width="(\d+)"/, (_, width) => `width="${Number(width) * resolution}"`).replace(/height="(\d+)"/, (_, height) => `height="${Number(height) * resolution}"`);
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(raster)}`;
   await image.decode();
-  return Texture.from(image);
+  return new Texture({ source: new ImageSource({ resource: image, resolution }) });
 }
 
 export class GameRenderer {
@@ -54,8 +57,11 @@ export class GameRenderer {
   private customImpact = false;
   private reduced = false;
   private destroyed = false;
+  private heroX = 0;
+  private enemyX = 0;
+  private coinTarget?: { x: number; y: number };
 
-  constructor(private engine: GameEngine, private attack: () => void) {}
+  constructor(private engine: GameEngine, private attack: () => void, private onLayout?: (layout: SceneLayout) => void, private goldTarget?: () => { x: number; y: number } | undefined) {}
 
   async init(host: HTMLElement) {
     try {
@@ -112,20 +118,11 @@ export class GameRenderer {
         this.width = host.clientWidth; this.height = host.clientHeight;
         this.app.renderer.resize(this.width, this.height);
         this.app.stage.hitArea = new Rectangle(0, 0, this.width, this.height);
-        this.ground = this.height * .815;
-        this.unit = Math.min(1.1, this.width / 950 + .28);
-        this.hero.position.set(this.width * (this.width < 600 ? .26 : .34), this.ground + 12);
-        this.enemy.position.set(this.width * (this.width < 600 ? (isBoss(this.engine.store.getState().stage) ? .69 : .72) : .66), this.ground + 12);
-        this.hero.scale.set(this.unit);
-        this.enemy.scale.set(this.unit * (isBoss(this.engine.store.getState().stage) ? presentation.bossScale : 1));
-        this.heroShadow.position.set(this.hero.x, this.ground - 3);
-        this.enemyShadow.position.set(this.enemy.x, this.ground - 3);
-        this.heroShadow.scale.set(this.unit);
-        this.enemyShadow.scale.set(this.enemy.scale.x);
-        const scale = Math.max(this.width / 1400, this.height / 760);
+        this.updateLayout();
+        const scale = Math.max(this.width / 1400, this.height / 760, (this.height - this.ground) / 140);
         for (const layer of [this.back, this.front]) {
           layer.scale.set(scale * 1.025);
-          layer.x = (this.width - 1400 * scale * 1.025) / 2;
+          layer.x = (this.width - layer.width) / 2;
           layer.y = this.ground - 620 * scale * 1.025;
         }
         this.atmosphere.clear().rect(0, 0, this.width, this.height).fill({ color: 0x251f40, alpha: isBoss(this.engine.store.getState().stage) ? .18 : 0 });
@@ -138,6 +135,24 @@ export class GameRenderer {
       this.destroy();
       throw error;
     }
+  }
+
+  private updateLayout() {
+    const boss = isBoss(this.engine.store.getState().stage);
+    this.ground = Math.min(this.height * .815, this.height - 112);
+    const actorHeight = boss ? 360 * presentation.bossScale : 280;
+    this.unit = Math.max(.25, Math.min(1.65, this.width / 760 + .3, (this.ground - 140) / actorHeight));
+    this.heroX = this.width * (this.width < 600 ? .26 : .34);
+    this.enemyX = this.width * (this.width < 600 ? (boss ? .65 : .72) : .66);
+    this.hero.position.set(this.heroX, this.ground + 12);
+    this.enemy.position.set(this.enemyX, this.ground + 12);
+    this.hero.scale.set(this.unit);
+    this.enemy.scale.set(this.unit * (boss ? presentation.bossScale : 1));
+    this.heroShadow.position.set(this.heroX, this.ground - 3);
+    this.enemyShadow.position.set(this.enemyX, this.ground - 3);
+    this.heroShadow.scale.set(this.unit);
+    this.enemyShadow.scale.set(this.enemy.scale.x);
+    this.onLayout?.({ enemyX: this.enemyX, ground: this.ground, unit: this.unit, boss });
   }
 
   private createActors() {
@@ -183,9 +198,9 @@ export class GameRenderer {
     this.enemyBody.texture = this.textures[boss ? 'bossBody' : ['sproutBody', 'mushroomBody', 'stoneBody'][enemyVariant(state.stage, state.defeated)]];
     this.enemyCrown.texture = this.textures.sproutCrown;
     this.enemyCrown.visible = !boss && enemyVariant(state.stage, state.defeated) === 0;
-    this.enemy.scale.set(this.unit * (boss ? presentation.bossScale : 1));
     this.entranceAge = 0; this.deathAge = 0; this.hitAge = 10;
     this.enemy.alpha = 1; this.enemy.rotation = 0;
+    this.updateLayout();
     this.atmosphere.clear().rect(0, 0, this.width, this.height).fill({ color: 0x30233f, alpha: boss ? .18 : 0 });
   }
 
@@ -223,6 +238,7 @@ export class GameRenderer {
   }
 
   private reward(boss: boolean) {
+    this.coinTarget = this.goldTarget?.();
     let used = 0;
     for (const c of this.coins) {
       if (c.view.visible) continue;
@@ -243,7 +259,7 @@ export class GameRenderer {
     this.heroCape.skew.x = Math.sin(this.time * 2) * .018 * motion;
     const hit = Math.max(0, 1 - this.hitAge / presentation.animation.hit);
     this.heroArm.rotation = -.95 * Math.sin(hit * Math.PI);
-    this.hero.x = this.width * (this.width < 600 ? .26 : .34) + hit * 13 * motion;
+    this.hero.x = this.heroX + hit * 13 * motion;
     this.hero.skew.x = -.025 * hit * motion;
     const boss = isBoss(state.stage);
     const bossScale = boss ? presentation.bossScale : 1;
@@ -254,7 +270,7 @@ export class GameRenderer {
       scale *= .75 + .25 * (1 - Math.pow(1 - t, 3));
     }
     this.enemy.scale.set(scale * (1 + hit * .1 * motion), scale * (1 - hit * .09 * motion + breath * .008));
-    this.enemy.x = this.width * (this.width < 600 ? (boss ? .69 : .72) : .66) + hit * 8 * motion;
+    this.enemy.x = this.enemyX + hit * 8 * motion;
     this.enemy.y = this.ground + 12 + breath * 3;
     if (boss && this.entranceAge < entranceDuration && !this.reduced) this.enemy.y += Math.pow(1 - this.entranceAge / entranceDuration, 2) * 35;
     this.enemyCrown.rotation = Math.sin(this.time * 2.3) * .025 * motion;
@@ -301,7 +317,7 @@ export class GameRenderer {
       const t = Math.max(0, (c.age - c.delay) / presentation.animation.coin);
       if (t > 1) { c.view.visible = false; continue; }
       const ease = t * t;
-      c.view.position.set(c.x + (this.width - 100 - c.x) * ease, c.y + (60 - c.y) * ease - Math.sin(t * Math.PI) * (this.reduced ? 0 : 95));
+      c.view.position.set(c.x + ((this.coinTarget?.x ?? this.width - 100) - c.x) * ease, c.y + ((this.coinTarget?.y ?? 60) - c.y) * ease - Math.sin(t * Math.PI) * (this.reduced ? 0 : 95));
       c.view.scale.set(1 - t * .4); c.view.alpha = Math.min(1, (1 - t) * 4);
     }
   }

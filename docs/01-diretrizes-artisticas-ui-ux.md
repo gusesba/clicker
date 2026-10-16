@@ -6,6 +6,8 @@ Este documento orienta toda criação ou alteração visual do Combat Clicker 2D
 
 O protótipo implementado em 16/10/2026 se chama **Wildbound — Guardiões do Bosque**. Há uma floresta vetorial em camadas, herói composto por partes, três criaturas comuns, um boss e interface responsiva. As regras abaixo continuam obrigatórias para novas funcionalidades.
 
+O redesign solicitado em “Refatoração de UI/UX — Combat Clicker 2D” substitui a composição de página pela tela de jogo. Cenário, personagens, animações e mecânicas são preservados. A riqueza visual vem da arte e do acabamento; informações permanentes ficam restritas às decisões do combate.
+
 ## Identidade implementada
 
 | Elemento | Escolha atual | Fonte |
@@ -17,7 +19,7 @@ O protótipo implementado em 16/10/2026 se chama **Wildbound — Guardiões do B
 | Verde principal | `#153c34` | Tema e `presentation.ts` |
 | Gold | `#e7bf67` | Tema e `presentation.ts` |
 | Verde claro | `#a8d6ae` | Tema e `presentation.ts` |
-| Pergaminho | `#f4f2e9` | Fundo e superfícies de interface |
+| Superfícies da HUD | `#35533c` e `#203b2b`, com contornos dourados | Upgrade e configurações integrados ao bosque |
 | Acento de boss | `#ef977e` | Configuração semântica de apresentação |
 | Títulos | Cinzel, pesos 600/700 | Fontes locais via Fontsource |
 | Texto e números | Nunito Sans, pesos 400/600/700/800 | Fontes locais via Fontsource |
@@ -45,20 +47,34 @@ Uma funcionalidade só está visualmente concluída quando seus estados, sua int
 
 ## Composição da tela
 
+A área de combate ocupa toda a viewport, sem cabeçalho institucional, logotipo permanente, título editorial, margens de página ou rodapé. A HUD é sobreposta ao cenário. Não introduzir seções de website, painéis de dashboard, divisórias sem função ou cards para preencher espaço.
+
 | Região | Conteúdo obrigatório | Regra de leitura e interação |
 | --- | --- | --- |
-| Topo | Fase, progresso da fase e gold | Consulta rápida, números legíveis e espaço para valores maiores |
+| Topo | Fase e progresso à esquerda; gold e configurações à direita | Consulta rápida, ícones e números legíveis, sem subtítulos |
 | Centro | Cenário, herói, um inimigo e efeitos | O combate domina a composição; o alvo é fácil de identificar e atingir |
 | Próxima ao inimigo | Nome, barra de vida e identificação de boss | Distinguir vida restante e tipo do encontro sem depender só de cor |
-| Parte inferior | Upgrade de dano, dano atual e custo seguinte | A compra e sua disponibilidade precisam ser compreensíveis imediatamente |
+| Base sobre o cenário | Ícone de ataque, dano atual → próximo dano, custo e botão de compra | Um único controle compacto, sem título, descrição, nível em badge ou mensagem motivacional |
 | Sobreposições contextuais | Dano, recompensa, nova fase e apresentação de boss | Permanecer breves, legíveis e sem bloquear desnecessariamente o combate |
 | Menu de configurações | Áudio e redução de efeitos | Mostrar claramente o estado selecionado e permitir retorno ao jogo |
 
 A HUD não pode cobrir informações essenciais do inimigo ou interceptar cliques destinados ao combate. Botões de interface não devem disparar ataques por propagação da mesma interação.
 
+### Política obrigatória de texto
+
+- Durante o combate normal, manter apenas fase, progresso, gold, nome/vida do inimigo e números/ação do upgrade.
+- Não usar slogans, taglines, nomes de seções, descrições redundantes, frases motivacionais ou mini-labels decorativas. Não substituir os textos removidos por variações semelhantes.
+- A única orientação inicial é “Clique para atacar”, removida após o primeiro golpe válido. Um save com progresso não volta a exibi-la. A dica não cria um novo campo de persistência.
+- Avanço comum de fase destaca a própria HUD; upgrade destaca o controle e o número. Não adicionar frases para acompanhar cada animação.
+- Reservar apresentações textuais maiores a eventos especiais, como entrada e derrota de boss. Os avisos atuais são o nome do boss e “Boss derrotado”, temporários.
+- Estado normal do save e controles de áudio ficam no menu. Um problema de save é sinalizado por um ponto no botão de configurações, com explicação funcional no menu.
+- Rótulos acessíveis e anúncios para leitores de tela permanecem disponíveis, sem se tornarem texto visual permanente.
+
+Antes de inserir texto, verificar se ele é necessário agora, muda uma decisão, já aparece em outro lugar ou pode ser comunicado visualmente. Se sua remoção não prejudicar o jogo, removê-lo.
+
 ## Linguagem visual da interface
 
-Use cards refinados, bordas e contornos consistentes, cantos arredondados, gradientes e sombras que criem profundidade. Os detalhes decorativos devem reforçar fantasia RPG sem competir com texto e valores.
+Use peças de HUD compactas com silhuetas reconhecíveis, contornos intencionais, gradientes controlados e sombras com peso. Os detalhes decorativos reforçam fantasia RPG sem competir com o combate. Não usar cards genéricos, glassmorphism, bordas translúcidas indiscriminadas ou containers aninhados como linguagem padrão. Tailwind é ferramenta de implementação, não referência estética.
 
 A tipografia deve ter hierarquia clara entre fase, recursos, vida e ações. Números precisam continuar legíveis sobre o cenário. Ícones devem compartilhar estilo e comunicar sua função, acompanhados de texto quando necessário.
 
@@ -69,11 +85,13 @@ Gold, dano, upgrades e bosses devem ter tratamentos semânticos distintos. A pal
 - Disponível: ação reconhecível e destaque discreto, especialmente quando houver gold para comprar.
 - Hover, quando existir ponteiro: realce curto, sem deslocar o layout.
 - Pressionado: resposta visual imediata de pressão ou escala.
-- Indisponível: aparência distinta e motivo compreensível, como gold insuficiente; não comunicar apenas por cor.
+- Indisponível: botão desabilitado e aparência distinta; gold disponível e custo continuam legíveis. Não adicionar uma descrição redundante de saldo insuficiente.
 - Compra concluída: pulso, brilho ou efeito mágico, atualização do dano e do custo, mais som específico quando habilitado.
 - Configuração ativada ou desativada: estado persistente visualmente identificável.
 
 Não criar um aspecto de painel administrativo ou dashboard corporativo. Toda ação exposta deve ter comportamento real; não incluir controles decorativos que pareçam funcionalidades existentes.
+
+A ordem de atenção é: inimigo/combate; vida; golpes; gold/progresso; upgrade disponível; configurações. Não usar tipografia grande para criar impacto editorial na tela de gameplay.
 
 ## Cenário e personagens
 
@@ -123,7 +141,7 @@ Use antecipação, follow-through, overshoot, squash and stretch e easing expres
 
 O feedback começa na interação, sem aguardar outra animação terminar. A configuração em `presentation.ts` define impacto de 0,16 s, morte de 0,24 s, entrada comum de 0,32 s, entrada de boss de 0,58 s, número de dano de 0,8 s e moedas de 0,7 s. O próximo alvo fica disponível após 260 ms, conforme `balance.ts`; o efeito de entrada pode continuar com o alvo já ativo.
 
-Os pools têm 90 partículas, 16 números e 24 moedas. Golpes comuns usam 9 partículas; finais comuns usam 20; finais de boss usam 34, respeitando a disponibilidade do pool. Shake máximo é de 2, 5 e 8 unidades, respectivamente. O modo reduzido remove shake/parallax, reduz emissões a 3 partículas e 3 moedas e atenua movimento dos números. GSAP faz contadores, realce de gold, feedback de compra e banners; os demais estados visuais contínuos são atualizados no ticker do PixiJS.
+Os pools têm 90 partículas, 16 números e 24 moedas. Golpes comuns usam 9 partículas; finais comuns usam 20; finais de boss usam 34, respeitando a disponibilidade do pool. Shake máximo é de 2, 5 e 8 unidades, respectivamente. O modo reduzido remove shake/parallax, reduz emissões a 3 partículas e 3 moedas e atenua movimento dos números. GSAP faz contadores, realce de gold, feedback de compra, pulso de fase e apresentações de boss; os demais estados visuais contínuos são atualizados no ticker do PixiJS. Upgrade disponível recebe brilho sutil, desativado no modo reduzido.
 
 PixiJS cuida da animação contínua do mundo. GSAP atua principalmente na interface e nas sequências especiais. A separação e a limpeza de recursos seguem o documento de arquitetura.
 
@@ -136,6 +154,7 @@ Fornecer volume e opção de desativar o áudio, desbloquear a reprodução apó
 ## Responsividade e redução de efeitos
 
 - No mobile, priorize composição vertical, toque confortável e safe areas.
+- Manter gameplay e controles na mesma viewport, sem rolagem de página para alcançar o upgrade; também verificar orientação paisagem.
 - No desktop, aproveite o espaço sem perder a predominância do combate.
 - Ajuste escala e posicionamento de personagens, cenário e HUD conforme o viewport; não dependa de uma proporção única.
 - Mantenha alvo e controles acessíveis sem sobreposição, cortes de texto ou rolagem involuntária durante os cliques.
@@ -146,4 +165,6 @@ Fornecer volume e opção de desativar o áudio, desbloquear a reprodução apó
 
 Verifique os estados relevantes em desktop e mobile: repouso, cliques rápidos, morte, compra disponível e indisponível, avanço de fase e boss. Confirme que a HUD permanece legível, os controles não bloqueiam ataques e não existem efeitos presos após transições.
 
-Ao adicionar assets, componentes ou efeitos, registre as decisões definitivas de identidade, os parâmetros visuais e eventuais limitações aqui. A versão inicial foi inspecionada por screenshots em desktop de 1440 px e mobile de 390/320 px, incluindo boss e configurações. Os arquivos estão em `artifacts/`; o script `scripts/verify-ui.mjs` permite repetir a verificação. Isso não substitui playtest em aparelhos físicos ou aprovação artística do usuário.
+Ao adicionar assets, componentes ou efeitos, registre as decisões definitivas de identidade, os parâmetros visuais e eventuais limitações aqui. O script `scripts/verify-ui.mjs` verifica desktop de 1440 px, mobile de 390/320 px, paisagem, boss e configurações, com capturas em `artifacts/`. Também verifica viewport sem rolagem, vida acima do alvo, controle inferior sem sobreposição e remoção da dica após atacar. Isso não substitui playtest em aparelhos físicos ou aprovação artística do usuário.
+
+Na revisão final, avaliar como um jogador recorrente: cada informação precisa estar presente em todas as sessões? Explica algo óbvio? O componente pertence a um jogo? Sua remoção prejudica alguma ação? Remover os elementos que não se justificarem.

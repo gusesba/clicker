@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Abra [http://127.0.0.1:5173](http://127.0.0.1:5173). Clique no inimigo ou use o botão “Clique no inimigo para atacar”, também acessível pelo teclado. Quando houver gold, o botão “Aprimorar” fica disponível. O menu de configurações controla volume, som e redução de movimento.
+Abra [http://127.0.0.1:5173](http://127.0.0.1:5173). Clique ou toque no inimigo. Pelo teclado, use Tab para focar “Atacar inimigo” e Enter/Espaço para atacar. A dica “Clique para atacar” desaparece após o primeiro golpe. O controle “Aprimorar” fica na base da tela; configurações de som, volume e movimento ficam no botão do canto superior direito.
 
 Para gerar e servir a versão de produção:
 
@@ -49,7 +49,7 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-O script verifica clique real no canvas, combate, compra, recarga, preferências, diálogo e layouts desktop/mobile de 390/320 px, incluindo boss. Capturas ficam em `artifacts/`. A variável opcional `CLICKER_URL` permite verificar outro servidor, como o preview de produção.
+O script verifica clique real no canvas, teclado, combate, compra, recarga, preferências e diálogo. Também verifica viewport sem rolagem, alinhamento da vida, dica temporária e controle de upgrade em desktop, mobile de 390/320 px e paisagem, incluindo boss. Capturas ficam em `artifacts/`. A variável opcional `CLICKER_URL` permite verificar outro servidor, como o preview de produção.
 
 ## Documentação obrigatória
 
